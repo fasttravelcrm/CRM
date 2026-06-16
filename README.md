@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fast Travels Umrah CRM — Next.js
 
-## Getting Started
+A modern, fast Umrah package management CRM built with Next.js 16, Supabase, and Tailwind CSS. Deployable on Netlify.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router, React Server Components)
+- **Database:** Supabase (PostgreSQL + Auth)
+- **UI:** Tailwind CSS + shadcn/ui
+- **Hosting:** Netlify
+
+---
+
+## Setup Instructions
+
+### 1. Create a Supabase Project
+
+1. Go to [https://supabase.com](https://supabase.com) and create a free project
+2. In the **SQL Editor**, run the entire contents of `supabase/migrations/001_initial.sql`
+3. This creates all tables, RLS policies, and seeds 33 hotels, 4 airlines, and default settings
+
+### 2. Configure Environment Variables
+
+Edit `.env.local` with your Supabase credentials:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Find these in your Supabase project: **Settings → API**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Create Your First Admin User
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+In **Supabase Dashboard → Authentication → Users**, click "Add user":
+- Email: `admin@fasttravels.pk`
+- Password: your choice
 
-## Learn More
+Then in the **SQL Editor**, link the user to `staff_users`:
 
-To learn more about Next.js, take a look at the following resources:
+```sql
+INSERT INTO staff_users (id, name, username, role, permission, status)
+SELECT id, 'Admin', 'admin', 'Admin', 'Full Access', 'Active'
+FROM auth.users WHERE email = 'admin@fasttravels.pk';
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Run Locally
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm install
+npm run dev
+```
 
-## Deploy on Vercel
+Open [http://localhost:3000](http://localhost:3000)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy to Netlify
+
+1. Push this folder to a GitHub repository
+2. In Netlify: **Add new site → Import from Git**
+3. Set build command: `npm run build`
+4. Set publish directory: `.next`
+5. Add environment variables (same as `.env.local`) in **Site settings → Environment variables**
+6. Deploy
+
+The `netlify.toml` and `@netlify/plugin-nextjs` handle everything automatically.
+
+---
+
+## Features
+
+| Module | Description |
+|---|---|
+| Dashboard | KPI cards, recent bookings, quick links |
+| Umrah Calculator | Live package builder with cost breakdown, WhatsApp copy, print invoice |
+| Bookings | Full booking list with search and delete |
+| Customers | Customer records derived from bookings |
+| Invoices | Invoice list with status |
+| Accounts | Payment recording, KPIs, payment history |
+| Reports | Revenue / Cost / Profit with airline breakdown |
+| Settings | Visa rates, airlines, transport, hotels, currency, company info |
+| Users & Staff | Staff CRUD with real Supabase Auth accounts |
