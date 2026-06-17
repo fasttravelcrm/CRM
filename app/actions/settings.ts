@@ -32,6 +32,23 @@ export async function updateVisa(formData: FormData) {
   return { success: true }
 }
 
+export async function updateZiarats(formData: FormData) {
+  const payload = {
+    makkah_ziarat_rate: Number(formData.get('makkah_ziarat_rate')),
+    madina_ziarat_rate: Number(formData.get('madina_ziarat_rate')),
+  }
+  if (isDemoMode()) {
+    Object.assign(demoStore.visa, payload)
+  } else {
+    const sb = await getSupabase()
+    const { data: existing } = await sb.from('visa_settings').select('id').single()
+    if (existing?.id) await sb.from('visa_settings').update(payload).eq('id', existing.id)
+    else await sb.from('visa_settings').insert(payload)
+  }
+  revalidatePath('/settings/ziarats')
+  return { success: true }
+}
+
 export async function updateCurrency(formData: FormData) {
   const payload = { sar_to_pkr: Number(formData.get('sar_to_pkr')) }
   if (isDemoMode()) {

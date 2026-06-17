@@ -5,12 +5,13 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const tabs = [
-  { href: '/settings/visa', label: 'Visa' },
-  { href: '/settings/tickets', label: 'Airlines' },
+  { href: '/settings/visa',      label: 'Visa' },
+  { href: '/settings/tickets',   label: 'Airlines' },
   { href: '/settings/transport', label: 'Transport' },
-  { href: '/settings/hotels', label: 'Hotels' },
-  { href: '/settings/currency', label: 'Currency' },
-  { href: '/settings/company', label: 'Company' },
+  { href: '/settings/hotels',    label: 'Hotels' },
+  { href: '/settings/ziarats',   label: 'Ziarats' },
+  { href: '/settings/currency',  label: 'Currency' },
+  { href: '/settings/company',   label: 'Company' },
 ]
 
 export default function SettingsNav() {

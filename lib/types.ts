@@ -8,6 +8,8 @@ export interface VisaSettings {
   child_sar: number
   infant_sar: number
   transport_mode: 'included' | 'separate'
+  makkah_ziarat_rate: number   // flat group rate (SAR)
+  madina_ziarat_rate: number   // flat group rate (SAR)
 }
 
 export interface CurrencySettings {
@@ -141,6 +143,8 @@ export interface CalcInput {
   sellingOverride: number | null
   advance: number
   customerName: string
+  makkahZiarat: boolean
+  madinahZiarat: boolean
 }
 
 export interface CalcResult {
@@ -150,6 +154,8 @@ export interface CalcResult {
   transportCost: number
   makkahCost: number
   madinahCost: number
+  makkahZiaratCost: number
+  madinahZiaratCost: number
   totalCost: number
   selling: number
   profit: number

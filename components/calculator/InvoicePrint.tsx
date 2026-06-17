@@ -1,4 +1,5 @@
 import { forwardRef } from 'react'
+import { Plane } from 'lucide-react'
 import type { Airline, Hotel, CalcResult, Company } from '@/lib/types'
 import { pkr } from '@/lib/formatters'
 
@@ -28,21 +29,50 @@ const InvoicePrint = forwardRef<HTMLDivElement, Props>(function InvoicePrint(
 ) {
   const today = new Date().toLocaleDateString('en-PK', { day: '2-digit', month: 'long', year: 'numeric' })
   const totalNights = makkahNights + madinahNights
+  const totalPax = adult + child + infant
   const paxStr = [
     adult > 0 ? `${adult} Adult${adult > 1 ? 's' : ''}` : '',
     child > 0 ? `${child} Child${child > 1 ? 'ren' : ''}` : '',
     infant > 0 ? `${infant} Infant${infant > 1 ? 's' : ''}` : '',
   ].filter(Boolean).join(', ')
 
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+  // Helper: single label→value row inside a card
+  const row = (label: string, value: string, bold = false) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '5px' }}>
+      <span style={{ fontSize: '10px', color: '#111827', flexShrink: 0, minWidth: '64px', paddingRight: '8px', fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: '10px', fontWeight: bold ? 700 : 500, textAlign: 'right', color: bold ? '#111827' : '#374151', wordBreak: 'break-word' }}>{value}</span>
+    </div>
+  )
+
+  const sectionHead = (title: string) => (
+    <p style={{ fontSize: '9px', fontWeight: 700, color: '#6b7280', letterSpacing: '0.07em', margin: '0 0 8px', paddingBottom: '6px', borderBottom: '1px solid #e5e7eb' }}>{title}</p>
+  )
+
   return (
     <div ref={ref} className="print-area" style={{ fontFamily: 'Inter, sans-serif', color: '#1a1a1a', background: 'white' }}>
       <div style={{ width: '194mm', margin: '0 auto', padding: '8mm' }}>
         {/* Header */}
         <div style={{ background: '#071426', color: 'white', borderRadius: '8px', padding: '16px 20px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 800, margin: 0, color: '#d4a84f' }}>{company.name}</h1>
-            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', margin: '2px 0 0' }}>{company.address} • {company.website}</p>
-            {company.phone && <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', margin: '1px 0 0' }}>{company.phone}</p>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Logo */}
+            {company.logo_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={company.logo_url}
+                alt={company.name}
+                style={{ width: '44px', height: '44px', borderRadius: '100%', objectFit: 'contain', background: 'transparent', padding: '0px', flexShrink: 0 }}
+              />
+            ) : (
+              <img src="/logo.webp" alt="Fast Travels & Tours" style={{ width: '54px', height: '54px', borderRadius: '100%', objectFit: 'contain', background: 'transparent', padding: '0px', flexShrink: 0 }} />
+            )}
+            <div>
+              <h1 style={{ fontSize: '18px', fontWeight: 800, margin: 0, color: '#d4a84f' }}>{company.name}</h1>
+              {company.license && <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.55)', margin: '2px 0 0', fontWeight: 500 }}>{company.license}</p>}
+              <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', margin: '2px 0 0' }}>{company.address} • {company.website}</p>
+              {company.phone && <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', margin: '1px 0 0' }}>{company.phone}</p>}
+            </div>
           </div>
           <div style={{ textAlign: 'right' }}>
             <p style={{ fontSize: '14px', fontWeight: 700, color: '#d4a84f', margin: 0 }}>INVOICE</p>
@@ -52,57 +82,64 @@ const InvoicePrint = forwardRef<HTMLDivElement, Props>(function InvoicePrint(
         </div>
 
         {/* Customer */}
-        <div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px 16px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between' }}>
-          <div>
-            <p style={{ fontSize: '10px', color: '#6b7280', marginBottom: '2px' }}>CUSTOMER</p>
-            <p style={{ fontSize: '14px', fontWeight: 700 }}>{customerName}</p>
-            <p style={{ fontSize: '11px', color: '#6b7280' }}>{paxStr}</p>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '10px', color: '#6b7280', marginBottom: '2px' }}>LICENSE</p>
-            <p style={{ fontSize: '11px', fontWeight: 600 }}>{company.license}</p>
-          </div>
+        <div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px 16px', marginBottom: '12px' }}>
+          <p style={{ fontSize: '10px', color: '#6b7280', marginBottom: '2px' }}>CUSTOMER</p>
+          <p style={{ fontSize: '14px', fontWeight: 700 }}>{customerName}</p>
+          <p style={{ fontSize: '11px', color: '#6b7280' }}>{paxStr}</p>
         </div>
 
-        {/* Package summary */}
-        <div style={{ background: '#f9fafb', borderRadius: '8px', padding: '12px 16px', marginBottom: '12px' }}>
-          <p style={{ fontSize: '10px', fontWeight: 700, color: '#6b7280', marginBottom: '8px', letterSpacing: '0.05em' }}>PACKAGE DETAILS</p>
-          <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }}>
-            <tbody>
-              <tr>
-                <td style={{ padding: '3px 0', color: '#6b7280' }}>Airline</td>
-                <td style={{ padding: '3px 0', fontWeight: 600, textAlign: 'right' }}>{airline?.name ?? 'N/A'}</td>
-              </tr>
-              <tr>
-                <td style={{ padding: '3px 0', color: '#6b7280' }}>Makkah</td>
-                <td style={{ padding: '3px 0', fontWeight: 600, textAlign: 'right' }}>{makkahHotel?.name ?? 'N/A'} • {makkahRoom} • {makkahNights}N</td>
-              </tr>
-              {makkahHotel && (
-                <tr>
-                  <td style={{ padding: '3px 0', color: '#6b7280' }}>Location</td>
-                  <td style={{ padding: '3px 0', textAlign: 'right', color: '#374151' }}>{makkahHotel.location} • {makkahHotel.distance}</td>
-                </tr>
-              )}
-              <tr>
-                <td style={{ padding: '3px 0', color: '#6b7280' }}>Madinah</td>
-                <td style={{ padding: '3px 0', fontWeight: 600, textAlign: 'right' }}>{madinahHotel?.name ?? 'N/A'} • {madinahRoom} • {madinahNights}N</td>
-              </tr>
-              {madinahHotel && (
-                <tr>
-                  <td style={{ padding: '3px 0', color: '#6b7280' }}>Location</td>
-                  <td style={{ padding: '3px 0', textAlign: 'right', color: '#374151' }}>{madinahHotel.location} • {madinahHotel.distance}</td>
-                </tr>
-              )}
-              <tr>
-                <td style={{ padding: '3px 0', color: '#6b7280' }}>Total Nights</td>
-                <td style={{ padding: '3px 0', fontWeight: 600, textAlign: 'right' }}>{totalNights} nights</td>
-              </tr>
-              <tr>
-                <td style={{ padding: '3px 0', color: '#6b7280' }}>Transport</td>
-                <td style={{ padding: '3px 0', fontWeight: 600, textAlign: 'right' }}>{transportMode === 'included' ? 'Included in Package' : 'Separate'}</td>
-              </tr>
-            </tbody>
-          </table>
+        {/* Package Details — 2×2 card grid */}
+        <div style={{ marginBottom: '12px' }}>
+          <p style={{ fontSize: '10px', fontWeight: 700, color: '#6b7280', letterSpacing: '0.07em', marginBottom: '8px' }}>PACKAGE DETAILS</p>
+
+          {/* Row 1: Flight & Passengers */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+
+            {/* Flight */}
+            <div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '10px 12px' }}>
+              {sectionHead('✈  FLIGHT & TRANSPORT')}
+              {row('Airline', airline?.name ?? 'N/A', true)}
+              {row('Transport', transportMode === 'included' ? 'Included in Pkg' : 'Separate')}
+              {row('Total Nights', `${totalNights} Nights`, true)}
+            </div>
+
+            {/* Passengers */}
+            <div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '10px 12px' }}>
+              {sectionHead('👥  PASSENGERS')}
+              {adult > 0   && row('Adults',   `${adult}`)}
+              {child > 0   && row('Children', `${child}`)}
+              {infant > 0  && row('Infants',  `${infant}`)}
+              {row('Total PAX', `${totalPax} Person${totalPax > 1 ? 's' : ''}`, true)}
+            </div>
+          </div>
+
+          {/* Row 2: Makkah & Madinah */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+
+            {/* Makkah */}
+            <div style={{ border: '1px solid #e5e7eb', borderLeft: '3px solid #d7ab52', borderRadius: '8px', padding: '10px 12px' }}>
+              {sectionHead('🕌  MAKKAH HOTEL')}
+              <p style={{ fontSize: '11px', fontWeight: 700, color: '#111827', margin: '0 0 7px', lineHeight: 1.3 }}>
+                {makkahHotel?.name ?? 'N/A'}
+              </p>
+              {row('Room Type', cap(makkahRoom))}
+              {makkahHotel && row('Location', makkahHotel.location)}
+              {makkahHotel && row('Distance', makkahHotel.distance)}
+              {row('Nights', `${makkahNights} Nights`, true)}
+            </div>
+
+            {/* Madinah */}
+            <div style={{ border: '1px solid #e5e7eb', borderLeft: '3px solid #d7ab52', borderRadius: '8px', padding: '10px 12px' }}>
+              {sectionHead('🕌  MADINAH HOTEL')}
+              <p style={{ fontSize: '11px', fontWeight: 700, color: '#111827', margin: '0 0 7px', lineHeight: 1.3 }}>
+                {madinahHotel?.name ?? 'N/A'}
+              </p>
+              {row('Room Type', cap(madinahRoom))}
+              {madinahHotel && row('Location', madinahHotel.location)}
+              {madinahHotel && row('Distance', madinahHotel.distance)}
+              {row('Nights', `${madinahNights} Nights`, true)}
+            </div>
+          </div>
         </div>
 
         {/* Totals */}

@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { BookmarkPlus, Copy, Printer, Loader2, CheckCircle } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
 import InvoicePrint from './InvoicePrint'
 import type { Company } from '@/lib/types'
 
@@ -31,6 +32,8 @@ export default function CalculatorForm({
   airlines, makkahHotels, madinahHotels, visa, currency, transportRates, company
 }: Props) {
   const printRef = useRef<HTMLDivElement>(null)
+  // Stable invoice number — generated once per calculator session
+  const invoiceNo = useRef(generateInvoiceNumber()).current
   const [isPending, startTransition] = useTransition()
   const [saved, setSaved] = useState(false)
 
@@ -50,6 +53,8 @@ export default function CalculatorForm({
   const [sellingOverride, setSellingOverride] = useState<number | null>(null)
   const [advance, setAdvance] = useState(0)
   const [customerName, setCustomerName] = useState('')
+  const [makkahZiarat, setMakkahZiarat] = useState(false)
+  const [madinahZiarat, setMadinahZiarat] = useState(false)
 
   const airline = airlines.find(a => a.id === airlineId) ?? null
   const makkahHotel = makkahHotels.find(h => h.id === makkahHotelId) ?? null
@@ -61,6 +66,8 @@ export default function CalculatorForm({
     madinahHotel, madinahRoom, madinahNights,
     profitType, profitValue, sellingOverride, advance,
     customerName,
+    makkahZiarat,
+    madinahZiarat,
   }
 
   const calc = useMemo(
@@ -70,10 +77,17 @@ export default function CalculatorForm({
      currency.sar_to_pkr,
      visa.visa_rate_1_pax, visa.visa_rate_2_pax, visa.visa_rate_3_pax,
      visa.visa_rate_4_pax, visa.visa_rate_group_pax,
-     visa.infant_sar, visa.transport_mode, transportRates]
+     visa.infant_sar, visa.transport_mode,
+     visa.makkah_ziarat_rate, visa.madina_ziarat_rate,
+     makkahZiarat, madinahZiarat, transportRates]
   )
 
-  const handlePrint = useReactToPrint({ contentRef: printRef })
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: customerName
+      ? `${invoiceNo}_${customerName.trim().replace(/\s+/g, '_')}`
+      : invoiceNo,
+  })
 
   async function handleSave() {
     startTransition(async () => {
@@ -117,7 +131,10 @@ export default function CalculatorForm({
       `👤 Passengers: ${adult} Adult${adult > 1 ? 's' : ''}${child ? `, ${child} Child` : ''}${infant ? `, ${infant} Infant` : ''}\n` +
       `✈️ Airline: ${airline?.name ?? 'N/A'}\n` +
       `🕌 Makkah: ${makkahHotel?.name ?? 'N/A'} (${makkahRoom}, ${makkahNights} nights)\n` +
-      `🕌 Madinah: ${madinahHotel?.name ?? 'N/A'} (${madinahRoom}, ${madinahNights} nights)\n\n` +
+      `🕌 Madinah: ${madinahHotel?.name ?? 'N/A'} (${madinahRoom}, ${madinahNights} nights)\n` +
+      (makkahZiarat  ? `🚌 Makkah Ziarats: Included\n` : '') +
+      (madinahZiarat ? `🚌 Madina Ziarats: Included\n` : '') +
+      `\n`+
       `💰 *Package: ${fmtPkr(calc.selling)}*\n` +
       `💰 Per Person: ${fmtPkr(calc.perPax)}\n\n` +
       `📞 ${company.phone || company.website}`
@@ -126,14 +143,14 @@ export default function CalculatorForm({
   }
 
   const rows = [
-    { label: 'Tickets', value: fmtPkr(calc.ticketCost) },
-    { label: 'Visa SAR', value: fmtPkr(calc.visaCost) },
+    { label: 'Tickets',                                                           value: fmtPkr(calc.ticketCost) },
+    { label: 'Visa',                                                              value: fmtPkr(calc.visaCost) },
     { label: visa.transport_mode === 'included' ? 'Transport (Included)' : 'Transport', value: visa.transport_mode === 'included' ? '—' : fmtPkr(calc.transportCost) },
-    { label: `Makkah Hotel (${makkahNights}N)`, value: fmtPkr(calc.makkahCost) },
-    { label: `Madinah Hotel (${madinahNights}N)`, value: fmtPkr(calc.madinahCost) },
+    { label: `Makkah Hotel (${makkahNights}N)`,                                   value: fmtPkr(calc.makkahCost) },
+    { label: `Madinah Hotel (${madinahNights}N)`,                                 value: fmtPkr(calc.madinahCost) },
+    ...(makkahZiarat  ? [{ label: 'Makkah Ziarats',  value: fmtPkr(calc.makkahZiaratCost)  }] : []),
+    ...(madinahZiarat ? [{ label: 'Madina Ziarats',  value: fmtPkr(calc.madinahZiaratCost) }] : []),
   ]
-
-  const invoiceNo = generateInvoiceNumber()
 
   return (
     <>
@@ -258,6 +275,45 @@ export default function CalculatorForm({
               </Card>
             )
           })}
+
+          {/* Ziarats */}
+          <Card className="shadow-sm border-0">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Ziarats
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <Checkbox
+                  checked={makkahZiarat}
+                  onCheckedChange={v => setMakkahZiarat(Boolean(v))}
+                />
+                <span className="text-sm">
+                  Include Makkah Ziarats
+                  {visa.makkah_ziarat_rate > 0 && (
+                    <span className="ml-1.5 text-xs text-muted-foreground">
+                      ({fmtPkr(visa.makkah_ziarat_rate * currency.sar_to_pkr)})
+                    </span>
+                  )}
+                </span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <Checkbox
+                  checked={madinahZiarat}
+                  onCheckedChange={v => setMadinahZiarat(Boolean(v))}
+                />
+                <span className="text-sm">
+                  Include Madinah Ziarats
+                  {visa.madina_ziarat_rate > 0 && (
+                    <span className="ml-1.5 text-xs text-muted-foreground">
+                      ({fmtPkr(visa.madina_ziarat_rate * currency.sar_to_pkr)})
+                    </span>
+                  )}
+                </span>
+              </label>
+            </CardContent>
+          </Card>
 
           {/* Profit */}
           <Card className="shadow-sm border-0">

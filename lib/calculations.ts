@@ -18,7 +18,8 @@ export function getCalc(
   const { adult, child, infant, airline, transportType,
           makkahHotel, makkahRoom, makkahNights,
           madinahHotel, madinahRoom, madinahNights,
-          profitType, profitValue, sellingOverride, advance } = input
+          profitType, profitValue, sellingOverride, advance,
+          makkahZiarat, madinahZiarat } = input
 
   const pax = Math.max(1, adult + child + infant)
 
@@ -46,7 +47,13 @@ export function getCalc(
   const madinahRateSar = madinahHotel ? (madinahHotel[`${madinahRoom}_sar`] as number) : 0
   const madinahCost = madinahRateSar * sarToPkr * madinahNights * pax
 
+  // Ziarats (PKR) — currently a flat group rate (not multiplied by PAX)
+  // To switch to per-PAX pricing, change: visa.makkah_ziarat_rate * sarToPkr * pax
+  const makkahZiaratCost = makkahZiarat ? visa.makkah_ziarat_rate * sarToPkr : 0
+  const madinahZiaratCost = madinahZiarat ? visa.madina_ziarat_rate * sarToPkr : 0
+
   const totalCost = ticketCost + visaCost + transportCost + makkahCost + madinahCost
+    + makkahZiaratCost + madinahZiaratCost
 
   // Selling price
   let autoSelling: number
@@ -68,6 +75,8 @@ export function getCalc(
     transportCost,
     makkahCost,
     madinahCost,
+    makkahZiaratCost,
+    madinahZiaratCost,
     totalCost,
     selling,
     profit,

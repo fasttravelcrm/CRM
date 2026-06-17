@@ -58,6 +58,8 @@ const DEFAULT_VISA: VisaSettings = {
   child_sar: 600,
   infant_sar: 460,
   transport_mode: 'included',
+  makkah_ziarat_rate: 0,
+  madina_ziarat_rate: 0,
 }
 const DEFAULT_CURRENCY: CurrencySettings = { id: 'c1', sar_to_pkr: 75 }
 const DEFAULT_COMPANY: Company = { id: 'co1', name: 'Fast Travels & Tours', license: 'Govt License', phone: '', website: 'fasttravels.pk', address: 'Pakistan', logo_url: '' }

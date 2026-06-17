@@ -47,6 +47,8 @@ export async function getVisa(): Promise<VisaSettings> {
     child_sar: 600,
     infant_sar: 460,
     transport_mode: 'included' as const,
+    makkah_ziarat_rate: 0,
+    madina_ziarat_rate: 0,
   }
 }
 
